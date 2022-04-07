@@ -1,7 +1,8 @@
 stages:
   - build
   - dev-deploy
-  - dev-stack-status
+  - uat-deploy
+  - prod-deploy
 
 variables:
   server: photbox.com
@@ -29,3 +30,23 @@ dev-deploy:
    tags: [docker]
    script:
      - make provision
+
+uat-deploy:
+  stage: uat-deploy
+  tags: [docker]
+  script:
+    - make provision
+  only:
+    - master
+    - tags
+  when: manual
+
+prod-deploy:
+  stage: prod-deploy
+  tags: [docker]
+  script:
+    - make provision
+  only:
+    - master
+    - tags
+  when: manual
