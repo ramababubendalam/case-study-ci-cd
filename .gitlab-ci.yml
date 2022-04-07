@@ -1,0 +1,31 @@
+stages:
+  - build
+  - dev-deploy
+  - dev-stack-status
+
+variables:
+  server: photbox.com
+  image_prefix: $server/docker
+
+image: photbox.com/docker/docker:19.03
+
+services:
+  - name: photbox.com/docker/docker:19.03-dind
+    alias: docker
+
+build:
+  stage: build
+  tags: [docker]
+  script:
+    - docker build -t $image_prefix/$CI_PROJECT_NAME:$CI_COMMIT_REF_NAME-$CI_PIPELINE_IID .
+    - docker tag $image_prefix/$CI_PROJECT_NAME:$CI_COMMIT_REF_NAME-$CI_PIPELINE_IID $image_prefix/$CI_PROJECT_NAME:$CI_COMMIT_REF_NAME-latest
+
+    - docker login -u $USER -p $KEY $server
+    - docker push $image_prefix/$CI_PROJECT_NAME:$CI_COMMIT_REF_NAME-$CI_PIPELINE_IID
+    - docker push $image_prefix/$CI_PROJECT_NAME:$CI_COMMIT_REF_NAME-latest
+
+dev-deploy:
+   stage: dev-deploy
+   tags: [docker]
+   script:
+     - make provision
